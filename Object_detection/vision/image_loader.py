@@ -1,3 +1,5 @@
+import os
+
 from PIL import Image as PILImage
 from copy import deepcopy
 from typing import List, Union
@@ -22,7 +24,15 @@ def load_image(image_filename: str, mode: str = RGB_CODE) -> Image:
     rows X cols X channels. The list is 2D in case of a grayscale image and 3D
     in case it's colored.
     """
-    img = PILImage.open(image_filename).convert(mode)
+    # Check if the file exists
+    if not os.path.exists(image_filename):
+        raise FileNotFoundError(f"The file '{image_filename}' was not found.")
+
+    try:
+        img = PILImage.open(image_filename).convert(mode)
+    except Exception as e:
+        raise IOError(f"An error occurred while opening the image: {e}")
+
     image = __lists_from_pil_image(img)
     return RGB2grayscale(image)
 
@@ -114,4 +124,5 @@ def RGB2grayscale(colored_image: ColoredImage) -> SingleChannelImage:
             temp_lst.append(round(to_greyscale_sum))
         greyscaled_img.append(temp_lst)
     return greyscaled_img
+
 
