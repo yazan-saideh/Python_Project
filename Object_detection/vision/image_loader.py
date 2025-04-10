@@ -3,6 +3,7 @@ import os
 from PIL import Image as PILImage
 from copy import deepcopy
 from typing import List, Union
+import numpy as np
 
 SingleChannelImage = List[List[int]]
 ColoredImage = List[List[List[int]]]
@@ -13,18 +14,14 @@ GRAYSCALE_CODE = "L"
 RGB_CODE = "RGB"
 
 
-def load_image(image_filename: str, mode: str = RGB_CODE) -> Image:
+# if in future colored images are needed, just change this function and add grayscale2RGB function
+def load_image(image_filename: str, mode: str = RGB_CODE) -> np.ndarray:
     """
-    Loads the image stored in the path image_filename and return it as a list
-    of lists.
-    :param image_filename: a path to an image file. If path doesn't exist an
-    exception will be thrown.
-    :param mode: use GRAYSCALE_CODE = "L" for grayscale images.
-    :return: a multi-dimensional list representing the image in the format
-    rows X cols X channels. The list is 2D in case of a grayscale image and 3D
-    in case it's colored.
+    Loads the image stored at image_filename and returns it as a NumPy array.
+    :param image_filename: Path to the image file.
+    :param mode: Use GRAYSCALE_CODE = "L" for grayscale images.
+    :return: A NumPy array representing the image (2D for grayscale, 3D for RGB).
     """
-    # Check if the file exists
     if not os.path.exists(image_filename):
         raise FileNotFoundError(f"The file '{image_filename}' was not found.")
 
@@ -33,31 +30,27 @@ def load_image(image_filename: str, mode: str = RGB_CODE) -> Image:
     except Exception as e:
         raise IOError(f"An error occurred while opening the image: {e}")
 
-    image = __lists_from_pil_image(img)
+    # Convert to NumPy array
+    image = np.array(img)
+    if mode == GRAYSCALE_CODE:
+        return image  # No need to convert if already grayscale
     return RGB2grayscale(image)
 
 
-def show_image(image: Image) -> None:
+def show_image(image: np.ndarray) -> None:
     """
-    Displays an image.
-    :param image: an image represented as a multi-dimensional list of the
-    format rows X cols X channels.
+    Displays an image (NumPy array) using PIL.
     """
-    __pil_image_from_lists(image).show()
+    pil_image = PILImage.fromarray(image)
+    pil_image.show()
 
 
-def save_image(image: Image, filename: str) -> None:
+def save_image(image: np.ndarray, filename: str) -> None:
     """
-    Converts an image represented as lists to an Image object and saves it as
-    an image file at the path specified by filename.
-    :param image: an image represented as a multi-dimensional list.
-    :param filename: a path in which to save the image file. If the path is
-    incorrect, an exception will be thrown.
+    Saves a NumPy array (image) to a file in PNG format.
     """
-    if not filename.endswith('.png'):
-        filename = f'{filename.split(".")[0]}.png'
-
-    __pil_image_from_lists(image).save(filename)
+    pil_image = PILImage.fromarray(image)
+    pil_image.save(filename)
 
 
 def __lists_from_pil_image(image: PILImage) -> Image:
@@ -100,29 +93,14 @@ def __pil_image_from_lists(image_as_lists: Image) -> PILImage:
     return im
 
 
-def RGB2grayscale(colored_image: ColoredImage) -> SingleChannelImage:
-    """ This function takes a colored image and turns it grey scaled"""
+def RGB2grayscale(image: np.ndarray) -> np.ndarray:
+    """
+    Converts an RGB image (3D NumPy array) to grayscale (2D NumPy array).
+    Uses vectorized operations for performance.
+    """
+    if image.ndim == 2:  # Already grayscale, no conversion needed
+        return image
 
-    greyscaled_img = []
-
-    # go over every element in the sub list of every sublist in the colored_image
-    for row_index in range(len(colored_image)):
-        temp_lst = []
-        for col_index in range(len(colored_image[0])):
-            to_greyscale_sum = 0
-            # if the channel_index is either 0,1,2 because its a colored image, so it checks at which index the channel is and multiply by a specific number.
-            for channel_index in range(len(colored_image[0][0])):
-                # if channel_index is 0 them it represents Red.
-                if channel_index == 0:
-                    to_greyscale_sum = to_greyscale_sum + colored_image[row_index][col_index][channel_index] * 0.299
-                # if channel_index is 1 them it represents Green.
-                elif channel_index == 1:
-                    to_greyscale_sum = to_greyscale_sum + colored_image[row_index][col_index][channel_index] * 0.587
-                # if channel_index is 2 them it represents Blue.
-                elif channel_index == 2:
-                    to_greyscale_sum = to_greyscale_sum + colored_image[row_index][col_index][channel_index] * 0.114
-            temp_lst.append(round(to_greyscale_sum))
-        greyscaled_img.append(temp_lst)
-    return greyscaled_img
-
-
+    # RGB to Grayscale conversion using matrix multiplication for efficiency
+    weights = np.array([0.299, 0.587, 0.114])
+    return np.dot(image[..., :3], weights)  # Only use RGB channels and apply weights
