@@ -55,4 +55,7 @@ To design and train a single, efficient deep neural network capable of performin
 - Model Evaluation and Visualization
 - Clean code structure and modular project design
 
+### Example
+![Figure_1](https://github.com/user-attachments/assets/5c8b0f98-102c-480e-957d-17771ac580d2)
+
 This project showcases the integration of multiple deep learning techniques into a single, unified system—highlighting both theoretical understanding and practical implementation skills in facial recognition systems.
