@@ -72,8 +72,8 @@ def extract_landmarks_and_bbox(image_folder, output_folder, target_size=(224, 22
 
 
 # Set your image folder and output folder paths
-image_folder = r"C:\Users\miner\OneDrive\Desktop\introtocs\Python_Project\training\archive_\MMAFEDB\test\surprise"  # Replace with your image folder path
-output_folder = r"C:\Users\miner\OneDrive\Desktop\introtocs\Python_Project1\training\archive_\Test_nyp\surprise"  # Replace with the folder where you want to save the data
+image_folder = r""  # Replace with your image folder path
+output_folder = r""  # Replace with the folder where you want to save the data
 
 # Extract landmarks and bounding box and save as .npy files
 extract_landmarks_and_bbox(image_folder, output_folder, target_size=(224, 224))
