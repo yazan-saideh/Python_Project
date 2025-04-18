@@ -2,11 +2,11 @@ import os
 import numpy as np
 import pandas as pd
 
-# Base folder where all expression folders are stored (each contains .npy files of landmarks)
-base_folder = r"C:\Users\miner\OneDrive\Desktop\introtocs\Python_Project\training\archive_\Test_nyp"
-img_root = r"C:\Users\miner\OneDrive\Desktop\introtocs\Python_Project\training\archive_\Test"
+# Base folder where all expression folders are stored (each contains .npy files of landmarks and bounding boxes)
+base_folder = r""
+img_root = r""
 
-output_csv = r"C:\Users\miner\OneDrive\Desktop\introtocs\Python_Project\training\archive_\Train_csv\landmarks_with_labels_Test.csv"
+output_csv = r""
 
 # Prepare list to hold all data rows
 all_data = []
@@ -21,16 +21,22 @@ for expression in expression_folders:
     for file in os.listdir(folder_path):
         if file.endswith('.npy'):
             landmark_path = os.path.join(folder_path, file)
-            landmarks = np.load(landmark_path)  # shape: (68, 2)
+            data = np.load(landmark_path, allow_pickle=True).item()  # Load dictionary (landmarks and bbox)
 
-            # Flatten 2D array of 68 keypoints into 1D list of 136 values
-            flattened = landmarks.flatten()
+            landmarks = data['landmarks']
+            bbox = data['bounding_box']
 
-            # Dynamically find the actual image file
+            # Flatten landmarks to 1D array
+            flattened_landmarks = landmarks.flatten()
+
+            # Get bounding box information
+            bbox_values = [
+                bbox['xmin'], bbox['ymin'], bbox['width'], bbox['height']
+            ]
+
             base_filename = os.path.splitext(file)[0]
             image_folder = os.path.join(img_root, expression)
             actual_filename = None
-
             for ext in ['.jpg', '.jpeg', '.png']:
                 candidate_path = os.path.join(image_folder, base_filename + ext)
                 if os.path.exists(candidate_path):
@@ -41,13 +47,14 @@ for expression in expression_folders:
                 print(f"⚠️ Image not found for: {base_filename} in {image_folder}")
                 continue  # Skip this file if the image doesn't exist
 
-            # Create a row: [filename, x1, y1, ..., x68, y68, expression_label]
-            row = [actual_filename] + flattened.tolist() + [expression]
+            # Create a row: [filename, x1, y1, ..., x68, y68, xmin, ymin, width, height, expression_label]
+            row = [actual_filename] + flattened_landmarks.tolist() + bbox_values + [expression]
             all_data.append(row)
 
 # Generate column names
-landmark_columns = [f'x{i//2+1}' if i % 2 == 0 else f'y{i//2+1}' for i in range(136)]
-columns = ['filename'] + landmark_columns + ['label']
+landmark_columns = [f'x{i//2+1}' if i % 2 == 0 else f'y{i//2+1}' for i in range(478*2)]
+bbox_columns = ['xmin', 'ymin', 'width', 'height']
+columns = ['filename'] + landmark_columns + bbox_columns + ['label']
 
 # Save as DataFrame
 df = pd.DataFrame(all_data, columns=columns)
