@@ -1,4 +1,4 @@
-## 📄 Project Description (for CV)
+## 📄 Project Description
 
 This project presents a comprehensive deep learning pipeline for **Facial Expression Recognition**, **Facial Landmark Detection**, and **Bounding Box Regression** using a custom multi-task learning architecture built with PyTorch. It reflects expertise in computer vision, deep learning, and practical deployment of multi-output neural networks.
 
